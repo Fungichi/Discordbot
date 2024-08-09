@@ -3,28 +3,22 @@ import sqlite3
 
 conn = sqlite3.connect('stats.sql')
 cursor = conn.cursor()
-input = input("stats or transactions: ")
 
-if input == "transactions":
-    cursor.execute('SELECT * FROM transaction_logs')
-
-
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+tables = cursor.fetchall()
+num = 0
+print("-"*20)
+for num,table in enumerate(tables):
+    print(f'[{num}] {table}')
+print("-"*20)
+try:
+    input = int(input("index: "))
+    table = tables[input][0]
+    query = f'SELECT * FROM {table}'
+    cursor.execute(query)
     rows = cursor.fetchall()
-
-
     for row in rows:
         print(row)
-
-elif input == "stats":
-    cursor.execute('SELECT * FROM user_stats')
-
-
-    rows = cursor.fetchall()
-
-
-    for row in rows:
-        print(row)
-else:
-    print("Invalid choice")
-
+except(ValueError):
+    print("Invalid input")
 conn.close()

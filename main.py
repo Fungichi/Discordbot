@@ -44,7 +44,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content.lower() == '*help':
-        await message.channel.send('Here is a list of commands:\n `*help` - Displays this message\n `*ping` - Pings the bot\n `*stats` - Displays your stats\n `*register`- Registers you as a user of the aura system')
+        await message.channel.send('Here is a list of commands:\n `*help` - Displays this message\n `*aura` - Used to give or take someones aura\n`*ping` - Pings the bot\n `*stats` - Displays your stats\n `*register`- Registers you as a user of the aura system')
         
     elif message.content.lower() == '*ping':
         await message.channel.send('Aura is online')
@@ -95,7 +95,7 @@ async def on_message(message):
             amount = int(message.content.split(' ')[2])
             reason = ' '.join(message.content.split(' ')[3:])
             
-                
+            
         except(ValueError,IndexError):
             print('Invalid command format')
             await message.channel.send('Invalid command format. Use the command in the following format:\n `*aura <receiver> <amount> <reason>`')
@@ -105,15 +105,28 @@ async def on_message(message):
             try:
                 rstats = find_stats(receiver)
                 sstats = find_stats(sender)
-                if rstats is not None and sstats is not None:
-                    cursor.execute('UPDATE user_stats SET tokens = tokens - ? WHERE username = ?', (abs(amount), sender))
-                    cursor.execute('UPDATE user_stats SET aura = aura + ? WHERE username = ?', (amount, receiver))
-                    cursor.execute('INSERT INTO transaction_logs (sender_name, receiver_name, amount, description) VALUES (?, ?, ?, ?)',(sender, receiver, amount, reason))
-                    await message.channel.send(f'{sender} gave {amount} aura to {receiver} because:\n {reason}')
+                print(rstats)
+                print(sstats)
+                if rstats is not None and sstats is not None and reason !="" and rstats != sstats:
+                    if rstats[1] >= amount:
+                        cursor.execute('UPDATE user_stats SET tokens = tokens - ? WHERE username = ?', (abs(amount), sender))
+                        cursor.execute('UPDATE user_stats SET aura = aura + ? WHERE username = ?', (amount, receiver))
+                        cursor.execute('INSERT INTO transaction_logs (sender_name, receiver_name, amount, description) VALUES (?, ?, ?, ?)',(sender, receiver, amount, reason))
+                        await message.channel.send(f'{sender} gave {amount} aura to {receiver} because:\n {reason}')    
+                    
+                    else:
+                        await message.channel.send(f'{sender}, you do not have enough tokens')
+                    
+                elif sstats == rstats:
+                    await message.channel.send('You cannot give yourself aura')
                 elif rstats is None:
-                    message.channel.send(f'{receiver} is not registered. Use the command `*register` to register.')
+                    await message.channel.send(f'{receiver} is not registered. Use the command `*register` to register.')
+
+                elif reason == "":
+                    await message.channel.send('Invalid command format. Use the command in the following format:\n `*aura <receiver> <amount> <reason>`')
                 else:
-                    message.channel.send(f'{sender} is not registered. Use the command `*register` to register.')
+                    await message.channel.send(f'{sender} is not registered. Use the command `*register` to register.')
+
                 conn.commit()
             finally:
                 conn.close()
@@ -124,5 +137,4 @@ client.run(TOKEN)
 
 
 #TO DO:
-#add max token limit to database
-#not a blank reason
+
