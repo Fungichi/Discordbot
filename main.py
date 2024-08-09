@@ -1,7 +1,8 @@
 import discord
 import sqlite3
+import os
 
-TOKEN = ""
+TOKEN = os.environ['TOKEN']
 intents = discord.Intents.default()
 intents.typing = True
 intents.presences = True
@@ -85,8 +86,43 @@ async def on_message(message):
             await message.channel.send(f'{username}, stats:\n Aura: `{aura}`\n Tokens: `{tokens}`')
         else:
             await message.channel.send(f'{username}, is not registered. Use the command `*register` to register.')
-        
+    elif message.content.lower().startswith('*aura'):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            sender = str(message.author)
+            receiver = message.content.split(' ')[1]
+            amount = int(message.content.split(' ')[2])
+            reason = ' '.join(message.content.split(' ')[3:])
+            
+                
+        except(ValueError,IndexError):
+            print('Invalid command format')
+            await message.channel.send('Invalid command format. Use the command in the following format:\n `*aura <receiver> <amount> <reason>`')
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            try:
+                rstats = find_stats(receiver)
+                sstats = find_stats(sender)
+                if rstats is not None and sstats is not None:
+                    cursor.execute('UPDATE user_stats SET tokens = tokens - ? WHERE username = ?', (abs(amount), sender))
+                    cursor.execute('UPDATE user_stats SET aura = aura + ? WHERE username = ?', (amount, receiver))
+                    cursor.execute('INSERT INTO transaction_logs (sender_name, receiver_name, amount, description) VALUES (?, ?, ?, ?)',(sender, receiver, amount, reason))
+                    await message.channel.send(f'{sender} gave {amount} aura to {receiver} because:\n {reason}')
+                elif rstats is None:
+                    message.channel.send(f'{receiver} is not registered. Use the command `*register` to register.')
+                else:
+                    message.channel.send(f'{sender} is not registered. Use the command `*register` to register.')
+                conn.commit()
+            finally:
+                conn.close()
     elif message.content.lower().startswith('*'):
         await message.channel.send('Invalid command. Use ```*help``` to see a list of available commands.')
 
 client.run(TOKEN)
+
+
+#TO DO:
+#add max token limit to database
+#not a blank reason

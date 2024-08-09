@@ -8,7 +8,8 @@ cursor = conn.cursor()
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS user_stats (
     username TEXT PRIMARY KEY,
-    aura INTEGER NOT NULL
+    aura INTEGER NOT NULL DEFAULT 0,
+    tokens INTEGER NOT NULL DEFAULT 500
 )
 ''')
 
@@ -26,3 +27,4 @@ CREATE TABLE IF NOT EXISTS transaction_logs (
 print("ran the file")
 conn.commit()
 conn.close()
+
