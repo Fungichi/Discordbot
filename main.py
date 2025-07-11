@@ -3,6 +3,7 @@ import sqlite3
 import os
 
 TOKEN = os.environ['TOKEN']
+channelid = 
 intents = discord.Intents.default()
 intents.typing = True
 intents.presences = True
@@ -29,7 +30,7 @@ def find_stats(username):
 async def on_ready():
     print(f'We have logged in as {client.user}')
     try:
-        channel = client.get_channel(1259126694757929042)
+        channel = client.get_channel(channel_id)
         if channel:
             await channel.send("ONLINE")
             print("[Starting sequence]:COMPLETE")
@@ -134,7 +135,3 @@ async def on_message(message):
         await message.channel.send('Invalid command. Use ```*help``` to see a list of available commands.')
 
 client.run(TOKEN)
-
-
-#TO DO:
-
